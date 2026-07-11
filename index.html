@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DevBox - 开发者在线工具箱</title>
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/blueimp-md5/js/md5.min.js"></script>
+<style>
+:root {
+  --bg: #fafaf8; --surface: #fff; --surface2: #f5f5f3; --border: #e8e8e4;
+  --text: #1a1a1a; --text2: #8a8a86; --text3: #b5b5b0;
+  --accent: #1a1a1a; --accent-hover: #3d3d3d; --accent-soft: #f3f3f1;
+  --radius: 12px; --radius-sm: 8px; --radius-xs: 6px;
+  --shadow: 0 1px 2px rgba(0,0,0,0.03); --shadow-md: 0 2px 8px rgba(0,0,0,0.04);
+  --transition: 0.25s cubic-bezier(0.22,0.61,0.36,1);
+}
+[data-theme="dark"] {
+  --bg: #0d0d0d; --surface: #141414; --surface2: #1c1c1c; --border: #262626;
+  --text: #e8e8e6; --text2: #7a7a76; --text3: #525252;
+  --accent: #f0f0f0; --accent-hover: #d4d4d4; --accent-soft: #1c1c1c;
+  --shadow: 0 1px 2px rgba(0,0,0,0.2); --shadow-md: 0 2px 8px rgba(0,0,0,0.3);
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+body { font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","Segoe UI",Roboto,"PingFang SC","Noto Sans SC",sans-serif; background:var(--bg); color:var(--text); min-height:100vh; transition:background var(--transition),color var(--transition); line-height:1.6; -webkit-font-smoothing:antialiased; }
+.navbar { padding:0 32px; height:56px; display:flex; align-items:center; justify-content:space-between; position:sticky; top:0; z-index:100; background:transparent; }
+.nav-brand { display:flex; align-items:center; gap:10px; cursor:pointer; user-select:none; }
+.nav-logo { width:28px; height:28px; background:var(--accent); border-radius:7px; display:flex; align-items:center; justify-content:center; color:var(--bg); font-weight:700; font-size:14px; transition:transform var(--transition); }
+.nav-brand:hover .nav-logo { transform:scale(1.05); }
+.nav-title { font-size:17px; font-weight:600; letter-spacing:-0.3px; color:var(--text); }
+.nav-actions { display:flex; align-items:center; gap:4px; }
+.btn { display:inline-flex; align-items:center; gap:5px; padding:7px 14px; border-radius:var(--radius-xs); font-size:13px; font-weight:500; border:1px solid var(--border); background:var(--surface); color:var(--text); cursor:pointer; transition:all var(--transition); white-space:nowrap; font-family:inherit; letter-spacing:-0.1px; }
+.btn:hover { background:var(--surface2); }
+.btn-accent { background:var(--accent); color:var(--bg); border-color:var(--accent); }
+.btn-accent:hover { background:var(--accent-hover); border-color:var(--accent-hover); }
+.btn-ghost { border:none; background:none; padding:7px 8px; font-size:16px; color:var(--text2); }
+.btn-ghost:hover { color:var(--text); background:none; }
+.btn-sm { padding:5px 10px; font-size:12px; border-radius:5px; }
+.container { max-width:1120px; margin:0 auto; padding:48px 32px 64px; }
+@media(max-width:640px){ .container{padding:32px 20px 48px;} }
+.hero { text-align:center; padding:64px 0 56px; }
+.hero-eyebrow { display:inline-block; font-size:11px; font-weight:600; letter-spacing:0.8px; text-transform:uppercase; color:var(--text2); margin-bottom:20px; }
+.hero h1 { font-size:44px; font-weight:700; letter-spacing:-1.5px; margin-bottom:14px; line-height:1.15; color:var(--text); }
+.hero p { font-size:17px; color:var(--text2); max-width:440px; margin:0 auto; font-weight:400; }
+@media(max-width:640px){ .hero{padding:40px 0 36px;} .hero h1{font-size:30px;letter-spacing:-1px;} }
+.tool-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(240px,1fr)); gap:10px; }
+.tool-card { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:24px; cursor:pointer; transition:all var(--transition); box-shadow:var(--shadow); }
+.tool-card:hover { border-color:var(--accent); box-shadow:var(--shadow-md); }
+.tool-card:active { transform:scale(0.995); }
+.card-icon { width:36px; height:36px; border-radius:9px; display:flex; align-items:center; justify-content:center; font-size:18px; margin-bottom:14px; background:var(--surface2); transition:background var(--transition); }
+.tool-card:hover .card-icon { background:var(--accent-soft); }
+.card-label { font-size:14px; font-weight:600; margin-bottom:4px; letter-spacing:-0.2px; color:var(--text); }
+.card-desc { font-size:12px; color:var(--text2); line-height:1.5; }
+@media(max-width:640px){ .tool-grid{grid-template-columns:1fr;} }
+.tool-view { display:none; animation:fadeIn 0.35s ease; }
+.tool-view.active { display:block; }
+@keyframes fadeIn { from{opacity:0;} to{opacity:1;} }
+.tool-header { display:flex; align-items:flex-start; gap:14px; margin-bottom:32px; }
+.back-btn { width:36px; height:36px; border-radius:var(--radius-xs); border:1px solid var(--border); background:var(--surface); color:var(--text2); font-size:16px; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:all var(--transition); flex-shrink:0; margin-top:2px; }
+.back-btn:hover { background:var(--surface2); color:var(--text); border-color:var(--accent); }
+.tool-title-area h2 { font-size:26px; font-weight:700; letter-spacing:-0.8px; color:var(--text); }
+.tool-title-area p { font-size:14px; color:var(--text2); margin-top:3px; }
+.panel { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:24px; margin-bottom:10px; box-shadow:var(--shadow); }
+.panel-label { display:block; font-size:11px; font-weight:600; color:var(--text3); text-transform:uppercase; letter-spacing:0.6px; margin-bottom:10px; }
+.panel-label-row { display:flex; align-items:center; justify-content:space-between; margin-bottom:10px; }
+textarea,input[type="text"],input[type="url"],input[type="number"] { width:100%; padding:12px 14px; border:1px solid var(--border); border-radius:var(--radius-sm); font-size:14px; font-family:"SF Mono","Fira Code","Cascadia Code","Consolas","JetBrains Mono",monospace; background:var(--surface2); color:var(--text); resize:vertical; transition:all var(--transition); line-height:1.65; }
+textarea:focus,input:focus { outline:none; border-color:var(--accent); box-shadow:0 0 0 2px rgba(0,0,0,0.04); }
+textarea { min-height:160px; }
+.output-box { background:var(--surface2); border:1px solid var(--border); border-radius:var(--radius-sm); padding:16px; min-height:60px; font-family:"SF Mono","Fira Code","Cascadia Code","Consolas","JetBrains Mono",monospace; font-size:13px; line-height:1.7; overflow-x:auto; white-space:pre-wrap; word-break:break-all; color:var(--text); }
+.btn-row { display:flex; gap:6px; margin-top:12px; flex-wrap:wrap; align-items:center; }
+.stat-row { display:flex; gap:12px; flex-wrap:wrap; margin-top:10px; }
+.stat-tag { font-size:12px; color:var(--text2); font-weight:500; }
+.stat-tag::after { content:' ·'; color:var(--text3); }
+.stat-tag:last-child::after { content:''; }
+.split2 { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+@media(max-width:768px){ .split2{grid-template-columns:1fr;} }
+.md-preview { line-height:1.75; color:var(--text); min-height:180px; font-size:14px; }
+.md-preview h1,.md-preview h2,.md-preview h3 { margin:20px 0 10px; font-weight:600; }
+.md-preview h1 { font-size:1.5em; } .md-preview h2 { font-size:1.25em; }
+.md-preview p { margin:10px 0; }
+.md-preview code { background:var(--surface2); padding:2px 5px; border-radius:4px; font-size:0.9em; }
+.md-preview pre { background:var(--surface2); padding:16px; border-radius:var(--radius-sm); overflow-x:auto; margin:14px 0; border:1px solid var(--border); }
+.md-preview pre code { background:none; padding:0; border:none; }
+.md-preview blockquote { border-left:2px solid var(--accent); padding-left:16px; margin:14px 0; color:var(--text2); }
+.md-preview table { border-collapse:collapse; width:100%; margin:14px 0; font-size:13px; }
+.md-preview th,.md-preview td { border:1px solid var(--border); padding:8px 12px; text-align:left; }
+.md-preview th { background:var(--surface2); font-weight:600; }
+.color-block { width:48px; height:48px; border-radius:var(--radius-sm); border:1px solid var(--border); flex-shrink:0; transition:background 0.3s; }
+.swatch-row { display:flex; gap:6px; flex-wrap:wrap; }
+.swatch { width:26px; height:26px; border-radius:6px; cursor:pointer; border:2px solid transparent; transition:all 0.15s; }
+.swatch:hover { border-color:var(--accent); transform:scale(1.18); }
+.toast-wrap { position:fixed; bottom:24px; right:24px; z-index:9999; display:flex; flex-direction:column-reverse; gap:8px; }
+.toast { padding:10px 18px; background:var(--accent); color:var(--bg); border-radius:var(--radius-xs); font-size:13px; font-weight:500; letter-spacing:-0.1px; animation:toastIn 0.3s ease; box-shadow:0 4px 16px rgba(0,0,0,0.12); pointer-events:none; }
+@keyframes toastIn { from{transform:translateY(12px);opacity:0} to{transform:translateY(0);opacity:1} }
+.footer { text-align:center; padding:24px 32px 40px; font-size:12px; color:var(--text3); letter-spacing:0.2px; }
+.check-row { display:flex; gap:14px; align-items:center; flex-wrap:wrap; font-size:12px; color:var(--text2); }
+.row-flex { display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
+.row-flex>* { flex:1; min-width:120px; }
+::-webkit-scrollbar { width:4px; height:4px; }
+::-webkit-scrollbar-track { background:transparent; }
+::-webkit-scrollbar-thumb { background:var(--border); border-radius:4px; }
+::selection { background:var(--accent); color:var(--bg); }
+.cat-tag { display:inline-block; padding:3px 8px; border-radius:4px; font-size:10px; font-weight:600; letter-spacing:0.3px; text-transform:uppercase; background:var(--surface2); color:var(--text3); margin-bottom:16px; }
+select { padding:7px 10px; border-radius:var(--radius-xs); border:1px solid var(--border); background:var(--surface); color:var(--text); font-size:12px; font-family:inherit; }
+</style>
+</head>
+<body data-theme="light">
+<nav class="navbar">
+  <div class="nav-brand" onclick="goHome()"><div class="nav-logo">D</div><div class="nav-title">DevBox</div></div>
+  <div class="nav-actions"><button class="btn btn-ghost" onclick="toggleTheme()">🌙</button></div>
+</nav>
+<div class="container"><div id="homeView">
+  <div class="hero"><div class="hero-eyebrow">Developer Toolkit</div><h1>开发者工具箱</h1><p>20 个实用开发工具，数据全部本地处理，即开即用</p></div>
+  <div class="tool-grid" id="toolGrid"></div>
+</div><div class="tool-view" id="toolView"></div></div>
+<footer class="footer">DevBox · 所有数据不上传服务器</footer>
+<div class="toast-wrap" id="toastWrap"></div>
+<script>
+// ========== UTILS ==========
+const $=id=>document.getElementById(id);
+function toast(m){const e=document.createElement('div');e.className='toast';e.textContent=m;$('toastWrap').appendChild(e);setTimeout(()=>e.remove(),1800)}
+async function copyText(t){if(!t){toast('没有可复制的内容');return}try{await navigator.clipboard.writeText(t);toast('已复制')}catch{toast('复制失败')}}
+function copyEl(id){copyText($(id).textContent.trim())}
+let _tsTimer=null;
+function clearTimers(){if(_tsTimer){clearInterval(_tsTimer);_tsTimer=null}}
+
+// ========== TOOLS ==========
+const TOOLS = [
+  {id:'json',cat:'格式化',title:'JSON 格式化',desc:'格式化、压缩与语法验证',icon:'{ }',render,actions:jsonActions},
+  {id:'sqlfmt',cat:'格式化',title:'SQL 格式化',desc:'SQL 语句美化与压缩',icon:'📊',render:sqlRender,actions:null},
+  {id:'cssfmt',cat:'格式化',title:'CSS 格式化',desc:'CSS 美化、压缩与清理',icon:'🎯',render:cssRender,actions:null},
+  {id:'htmlfmt',cat:'格式化',title:'HTML 格式化',desc:'HTML 代码美化与压缩',icon:'🏗',render:htmlRender,actions:null},
+  {id:'url',cat:'编解码',title:'URL 编解码',desc:'参数编码与解码，支持中文',icon:'🔗',render:urlRender,actions:null},
+  {id:'base64',cat:'编解码',title:'Base64 编解码',desc:'文本与 Base64 互转',icon:'🔒',render:b64Render,actions:null},
+  {id:'jwt',cat:'编解码',title:'JWT 解析器',desc:'解析 JWT 的 Header 与 Payload',icon:'🔑',render:jwtRender,actions:null},
+  {id:'htmlent',cat:'编解码',title:'HTML 实体编解码',desc:'HTML 实体编码与解码转义',icon:'🏷',render:htmlentRender,actions:null},
+  {id:'unicode',cat:'编解码',title:'Unicode 转换',desc:'Unicode 与中文互转',icon:'🌐',render:unicodeRender,actions:null},
+  {id:'uuid',cat:'生成器',title:'UUID 生成器',desc:'生成 UUID v4，支持批量',icon:'🆔',render:uuidRender,actions:null},
+  {id:'password',cat:'生成器',title:'密码生成器',desc:'生成高强度随机密码',icon:'🔐',render:pwRender,actions:null},
+  {id:'lorem',cat:'生成器',title:'Lorem Ipsum',desc:'生成占位文本，支持中英文',icon:'📝',render:loremRender,actions:null},
+  {id:'hash',cat:'计算器',title:'哈希计算器',desc:'MD5 / SHA-1 / SHA-256 摘要',icon:'#️⃣',render:hashRender,actions:null},
+  {id:'charcount',cat:'计算器',title:'字符统计',desc:'字符、单词、行数、字节数',icon:'🔢',render:ccRender,actions:null},
+  {id:'radix',cat:'计算器',title:'进制转换',desc:'二/八/十/十六进制互转',icon:'🔣',render:radixRender,actions:null},
+  {id:'timestamp',cat:'转换器',title:'时间戳转换',desc:'Unix 时间戳与日期双向转换',icon:'🕐',render:tsRender,actions:null},
+  {id:'color',cat:'转换器',title:'颜色转换',desc:'HEX / RGB / HSL 互转',icon:'🎨',render:colorRender,actions:null},
+  {id:'regex',cat:'测试器',title:'正则测试器',desc:'在线测试、匹配与替换',icon:'.*',render:regexRender,actions:null},
+  {id:'markdown',cat:'测试器',title:'Markdown 预览',desc:'实时渲染 GFM 格式文档',icon:'📄',render:mdRender,actions:null},
+  {id:'text',cat:'文本',title:'文本处理',desc:'去重、排序、大小写、反转',icon:'📋',render:textRender,actions:null},
+];
+
+// ========== NAVIGATION ==========
+function goHome(){clearTimers();$('homeView').style.display='block';$('toolView').classList.remove('active');$('toolView').innerHTML=''}
+function openTool(tid){clearTimers();const t=TOOLS.find(x=>x.id===tid);if(!t)return;$('homeView').style.display='none';const tv=$('toolView');tv.innerHTML='<div class="tool-header"><button class="back-btn" onclick="goHome()">←</button><div class="tool-title-area"><h2>'+t.title+'</h2><p>'+t.desc+'</p></div></div><div id="toolContent"></div>';tv.classList.add('active');t.render();if(t.actions)t.actions();window.scrollTo({top:0,behavior:'smooth'})}
+function buildHomeCards(){const cats={},order=[];TOOLS.forEach(t=>{if(!cats[t.cat]){cats[t.cat]=[];order.push(t.cat)}cats[t.cat].push(t)});let h='';order.forEach(cat=>{h+='<div style="grid-column:1/-1;margin-top:12px;margin-bottom:2px"><span class="cat-tag">'+cat+'</span></div>';cats[cat].forEach(t=>{h+='<div class="tool-card" onclick="openTool(\''+t.id+'\')"><div class="card-icon">'+t.icon+'</div><div class="card-label">'+t.title+'</div><div class="card-desc">'+t.desc+'</div></div>'})});$('toolGrid').innerHTML=h}
+buildHomeCards();
+
+// ========== JSON ==========
+function render(){$('toolContent').innerHTML='<div class="panel"><span class="panel-label">输入</span><textarea id="jsonIn" placeholder="粘贴 JSON 字符串…"></textarea><div class="btn-row"><button class="btn btn-accent" id="jsonFmt">格式化</button><button class="btn" id="jsonCmp">压缩</button><button class="btn" id="jsonVal">验证</button><button class="btn btn-sm" id="jsonClr">清空</button><span style="font-size:12px;color:var(--text3);margin-left:auto" id="jsonInfo"></span></div></div><div class="panel"><div class="panel-label-row"><span class="panel-label" style="margin:0">输出</span><button class="btn btn-sm" id="jsonCopy">复制</button></div><div class="output-box" id="jsonOut"></div></div>'}
+function jsonActions(){const i=$('jsonIn'),o=$('jsonOut'),n=$('jsonInfo');i.addEventListener('input',()=>{const l=i.value.split('\n').length;n.textContent=i.value.trim()?l+' 行':''});function g(){if(!i.value.trim()){toast('请先输入');return null}try{return JSON.parse(i.value)}catch(e){o.textContent='错误: '+e.message;toast('格式无效');return null}}$('jsonFmt').onclick=()=>{const v=g();if(v){const s=JSON.stringify(v,null,2);o.textContent=s;n.textContent=s.split('\n').length+' 行';toast('格式化完成')}};$('jsonCmp').onclick=()=>{const v=g();if(v){const s=JSON.stringify(v);o.textContent=s;n.textContent=s.length+' 字符';toast('压缩完成')}};$('jsonVal').onclick=()=>{if(!i.value.trim())return toast('请先输入');try{const v=JSON.parse(i.value),t=Array.isArray(v)?'数组':typeof v,k=(typeof v==='object'&&v!==null)?Object.keys(v).length:0;o.textContent='格式正确 · 类型: '+t+(k?' · 字段: '+k:'');toast('格式有效')}catch(e){const m=e.message.match(/position (\d+)/);let d='错误: '+e.message;if(m){const p=+m[1];d+='\n\n'+i.value.slice(Math.max(0,p-30),p)+' ▸ HERE ▸ '+i.value.slice(p,p+30)}o.textContent=d;toast('格式无效')}};$('jsonClr').onclick=()=>{i.value='';o.textContent='';n.textContent=''};$('jsonCopy').onclick=()=>copyEl('jsonOut')}
+
+// ========== SQL ==========
+function sqlRender(){$('toolContent').innerHTML='<div class="panel"><span class="panel-label">输入</span><textarea id="sqlIn" placeholder="输入 SQL 语句…"></textarea><div class="btn-row"><button class="btn btn-accent" id="sqlFmt">格式化</button><button class="btn" id="sqlCmp">压缩</button><button class="btn btn-sm" id="sqlClr">清空</button></div></div><div class="panel"><div class="panel-label-row"><span class="panel-label" style="margin:0">输出</span><button class="btn btn-sm" id="sqlCopy">复制</button></div><div class="output-box" id="sqlOut"></div></div>';
+function fmt(s){const kw=['SELECT','FROM','WHERE','AND','OR','INSERT','INTO','VALUES','UPDATE','SET','DELETE','CREATE','TABLE','ALTER','ADD','DROP','INDEX','JOIN','LEFT','RIGHT','INNER','OUTER','ON','GROUP','BY','ORDER','HAVING','LIMIT','OFFSET','UNION','ALL','AS','IN','NOT','NULL','IS','LIKE','BETWEEN','EXISTS','CASE','WHEN','THEN','ELSE','END','DISTINCT','COUNT','SUM','AVG','MAX','MIN'];let r=s.replace(/\s+/g,' ').trim();kw.forEach(k=>{const re=new RegExp('\\b'+k+'\\b','gi');r=r.replace(re,k.toUpperCase())});const breaks=['SELECT','FROM','WHERE','AND','OR','ORDER BY','GROUP BY','HAVING','LIMIT','LEFT JOIN','RIGHT JOIN','INNER JOIN','OUTER JOIN','JOIN','SET','VALUES'];breaks.forEach(b=>{r=r.replace(new RegExp('\\s*'+b+'\\s*','gi'),'\n'+b.toUpperCase()+' ')});r=r.replace(/, /g,',\n  ');r=r.replace(/\n\s*\n/g,'\n');return r.trim()}
+$('sqlFmt').onclick=()=>{const v=$('sqlIn').value;if(!v.trim())return toast('请先输入');$('sqlOut').textContent=fmt(v);toast('格式化完成')};
+$('sqlCmp').onclick=()=>{const v=$('sqlIn').value;if(!v.trim())return toast('请先输入');$('sqlOut').textContent=v.replace(/\s+/g,' ').trim();toast('压缩完成')};
+$('sqlClr').onclick=()=>{$('sqlIn').value='';$('sqlOut').textContent=''};$('sqlCopy').onclick=()=>copyEl('sqlOut')}
+
+// ========== CSS ==========
+function cssRender(){$('toolContent').innerHTML='<div class="panel"><span class="panel-label">输入</span><textarea id="cssIn" placeholder="输入 CSS 代码…"></textarea><div class="btn-row"><button class="btn btn-accent" id="cssFmt">格式化</button><button class="btn" id="cssCmp">压缩</button><button class="btn btn-sm" id="cssClr">清空</button></div></div><div class="panel"><div class="panel-label-row"><span class="panel-label" style="margin:0">输出</span><button class="btn btn-sm" id="cssCopy">复制</button></div><div class="output-box" id="cssOut"></div></div>';
+$('cssFmt').onclick=()=>{let v=$('cssIn').value;if(!v.trim())return toast('请先输入');v=v.replace(/\s*{\s*/g,' {\n  ').replace(/;\s*/g,';\n  ').replace(/\s*}\s*/g,'\n}\n').replace(/:\s*/g,': ').replace(/\n\s*\n/g,'\n').replace(/;\n\s*}/g,';\n}');$('cssOut').textContent=v.trim();toast('格式化完成')};
+$('cssCmp').onclick=()=>{const v=$('cssIn').value;if(!v.trim())return toast('请先输入');$('cssOut').textContent=v.replace(/\s+/g,' ').replace(/\s*{\s*/g,'{').replace(/;\s*}/g,'}').trim();toast('压缩完成')};
+$('cssClr').onclick=()=>{$('cssIn').value='';$('cssOut').textContent=''};$('cssCopy').onclick=()=>copyEl('cssOut')}
+
+// ========== HTML ==========
+function htmlRender(){$('toolContent').innerHTML='<div class="panel"><span class="panel-label">输入</span><textarea id="htmlIn" placeholder="输入 HTML 代码…"></textarea><div class="btn-row"><button class="btn btn-accent" id="htmlFmt">格式化</button><button class="btn" id="htmlCmp">压缩</button><button class="btn btn-sm" id="htmlClr">清空</button></div></div><div class="panel"><div class="panel-label-row"><span class="panel-label" style="margin:0">输出</span><button class="btn btn-sm" id="htmlCopy">复制</button></div><div class="output-box" id="htmlOut"></div></div>';
+$('htmlFmt').onclick=()=>{const v=$('htmlIn').value;if(!v.trim())return toast('请先输入');let r='',ind=0;const parts=v.replace(/></g,'>\n<').split(/>\s*</);for(let i=0;i<parts.length;i++){let t=parts[i];if(!t.startsWith('<'))t='<'+t;if(!t.endsWith('>'))t=t+'>';const isClose=t.startsWith('</'),isSelf=/\/>$/.test(t)||/^(<area|<base|<br|<col|<embed|<hr|<img|<input|<link|<meta|<param|<source|<track|<wbr)/i.test(t);if(isClose)ind=Math.max(0,ind-1);r+='  '.repeat(ind)+t+'\n';if(!isClose&&!isSelf)ind++}$('htmlOut').textContent=r.trim();toast('格式化完成')};
+$('htmlCmp').onclick=()=>{const v=$('htmlIn').value;if(!v.trim())return toast('请先输入');$('htmlOut').textContent=v.replace(/\s+/g,' ').replace(/>\s+</g,'><').trim();toast('压缩完成')};
+$('htmlClr').onclick=()=>{$('htmlIn').value='';$('htmlOut').textContent=''};$('htmlCopy').onclick=()=>copyEl('htmlOut')}
+
+// ========== URL ==========
+function urlRender(){$('toolContent').innerHTML='<div class="panel"><span class="panel-label">输入</span><textarea id="urlIn" placeholder="输入 URL 或文本…"></textarea><div class="btn-row"><button class="btn btn-accent" id="urlEnc">编码</button><button class="btn" id="urlDec">解码</button><button class="btn btn-sm" id="urlClr">清空</button></div></div><div class="panel"><div class="panel-label-row"><span class="panel-label" style="margin:0">输出</span><button class="btn btn-sm" id="urlCopy">复制</button></div><div class="output-box" id="urlOut"></div></div>';$('urlEnc').onclick=()=>{const v=$('urlIn').value;if(!v)return toast('请先输入');const r=encodeURIComponent(v);$('urlOut').textContent=r;$('urlIn').value=r};$('urlDec').onclick=()=>{const v=$('urlIn').value;if(!v)return toast('请先输入');try{const r=decodeURIComponent(v);$('urlOut').textContent=r;$('urlIn').value=r}catch(e){$('urlOut').textContent='解码错误: '+e.message}};$('urlClr').onclick=()=>{$('urlIn').value='';$('urlOut').textContent=''};$('urlCopy').onclick=()=>copyEl('urlOut')}
+
+// ========== BASE64 ==========
+function b64Render(){$('toolContent').innerHTML='<div class="panel"><span class="panel-label">输入</span><textarea id="b64In" placeholder="输入文本或 Base64…"></textarea><div class="btn-row"><button class="btn btn-accent" id="b64Enc">编码</button><button class="btn" id="b64Dec">解码</button><button class="btn btn-sm" id="b64Clr">清空</button></div></div><div class="panel"><div class="panel-label-row"><span class="panel-label" style="margin:0">输出</span><button class="btn btn-sm" id="b64Copy">复制</button></div><div class="output-box" id="b64Out"></div></div>';$('b64Enc').onclick=()=>{const v=$('b64In').value;if(!v)return toast('请先输入');try{const r=btoa(unescape(encodeURIComponent(v)));$('b64Out').textContent=r;$('b64In').value=r;toast('编码完成')}catch(e){$('b64Out').textContent='错误: '+e.message}};$('b64Dec').onclick=()=>{const v=$('b64In').value.trim();if(!v)return toast('请先输入');try{const r=decodeURIComponent(escape(atob(v)));$('b64Out').textContent=r;$('b64In').value=r;toast('解码完成')}catch(e){$('b64Out').textContent='解码错误: '+e.message+'\n请确认是有效的 Base64 字符串'}};$('b64Clr').onclick=()=>{$('b64In').value='';$('b64Out').textContent=''};$('b64Copy').onclick=()=>copyEl('b64Out')}
+
+// ========== JWT ==========
+function jwtRender(){$('toolContent').innerHTML='<div class="panel"><span class="panel-label">输入</span><textarea id="jwtIn" placeholder="粘贴 JWT Token…" style="min-height:100px"></textarea><div class="btn-row"><button class="btn btn-accent" id="jwtDec">解析</button><button class="btn btn-sm" id="jwtClr">清空</button></div></div><div class="panel"><span class="panel-label">Header</span><div class="output-box" id="jwtHeader"></div></div><div class="panel"><span class="panel-label">Payload</span><div class="output-box" id="jwtPayload"></div></div>';
+function b64urlDec(s){s=s.replace(/-/g,'+').replace(/_/g,'/');while(s.length%4)s+='=';try{return decodeURIComponent(escape(atob(s)))}catch(e){try{return atob(s)}catch(e2){return'解码失败'}}}
+$('jwtDec').onclick=()=>{const v=$('jwtIn').value.trim();if(!v)return toast('请先输入');const parts=v.split('.');if(parts.length!==3){$('jwtHeader').textContent='无效的 JWT 格式';$('jwtPayload').textContent='';return}const h=b64urlDec(parts[0]),p=b64urlDec(parts[1]);try{$('jwtHeader').textContent=JSON.stringify(JSON.parse(h),null,2)}catch(e){$('jwtHeader').textContent=h}try{$('jwtPayload').textContent=JSON.stringify(JSON.parse(p),null,2)}catch(e){$('jwtPayload').textContent=p}toast('解析完成')};$('jwtClr').onclick=()=>{$('jwtIn').value='';$('jwtHeader').textContent='';$('jwtPayload').textContent=''}}
+
+// ========== HTML ENTITY ==========
+function htmlentRender(){$('toolContent').innerHTML='<div class="panel"><span class="panel-label">输入</span><textarea id="heIn" placeholder="输入文本或 HTML 实体…"></textarea><div class="btn-row"><button class="btn btn-accent" id="heEnc">编码</button><button class="btn" id="heDec">解码</button><button class="btn btn-sm" id="heClr">清空</button></div></div><div class="panel"><div class="panel-label-row"><span class="panel-label" style="margin:0">输出</span><button class="btn btn-sm" id="heCopy">复制</button></div><div class="output-box" id="heOut"></div></div>';$('heEnc').onclick=()=>{const v=$('heIn').value;if(!v)return toast('请先输入');const d=document.createElement('div');d.textContent=v;$('heOut').textContent=d.innerHTML;$('heIn').value=d.innerHTML};$('heDec').onclick=()=>{const v=$('heIn').value;if(!v)return toast('请先输入');const d=document.createElement('div');d.innerHTML=v;$('heOut').textContent=d.textContent;$('heIn').value=d.textContent};$('heClr').onclick=()=>{$('heIn').value='';$('heOut').textContent=''};$('heCopy').onclick=()=>copyEl('heOut')}
+
+// ========== UNICODE ==========
+function unicodeRender(){$('toolContent').innerHTML='<div class="panel"><span class="panel-label">输入</span><textarea id="uniIn" placeholder="输入中文或 Unicode 转义序列…"></textarea><div class="btn-row"><button class="btn btn-accent" id="uniToUni">文本 → Unicode</button><button class="btn" id="uniToText">Unicode → 文本</button><button class="btn btn-sm" id="uniClr">清空</button></div></div><div class="panel"><div class="panel-label-row"><span class="panel-label" style="margin:0">输出</span><button class="btn btn-sm" id="uniCopy">复制</button></div><div class="output-box" id="uniOut"></div></div>';$('uniToUni').onclick=()=>{const v=$('uniIn').value;if(!v)return toast('请先输入');let r='';for(let i=0;i<v.length;i++){const c=v.charCodeAt(i);r+=c>127?'\\u'+c.toString(16).padStart(4,'0'):v[i]}$('uniOut').textContent=r;toast('转换完成')};$('uniToText').onclick=()=>{const v=$('uniIn').value;if(!v)return toast('请先输入');try{const r=v.replace(/\\u([0-9a-fA-F]{4})/g,(_,c)=>String.fromCharCode(parseInt(c,16)));$('uniOut').textContent=r;toast('转换完成')}catch(e){$('uniOut').textContent='转换错误: '+e.message}};$('uniClr').onclick=()=>{$('uniIn').value='';$('uniOut').textContent=''};$('uniCopy').onclick=()=>copyEl('uniOut')}
+
+// ========== UUID ==========
+function uuidRender(){const gen=()=>{const n=parseInt($('uuidCount').value)||5;let a=[];for(let i=0;i<n;i++)a.push(crypto.randomUUID());$('uuidOut').textContent=a.join('\n');$('uuidInfo').textContent=n+' 个'};$('toolContent').innerHTML='<div class="panel"><span class="panel-label">选项</span><div class="row-flex"><div><span style="font-size:13px;color:var(--text2)">数量</span><input type="number" id="uuidCount" value="5" min="1" max="100" style="width:80px"></div><button class="btn btn-accent" id="uuidGen" style="flex:0;min-width:auto">生成</button><span style="font-size:12px;color:var(--text3)" id="uuidInfo"></span></div></div><div class="panel"><div class="panel-label-row"><span class="panel-label" style="margin:0">输出</span><button class="btn btn-sm" id="uuidCopy">复制</button></div><div class="output-box" id="uuidOut"></div></div>';$('uuidGen').onclick=gen;$('uuidCopy').onclick=()=>copyEl('uuidOut');gen()}
+
+// ========== PASSWORD ==========
+function pwRender(){const gen=()=>{const l=parseInt($('pwLen').value)||16,up=$('pwUp').checked,lo=$('pwLo').checked,di=$('pwDi').checked,sy=$('pwSy').checked;let chars='';if(up)chars+='ABCDEFGHIJKLMNOPQRSTUVWXYZ';if(lo)chars+='abcdefghijklmnopqrstuvwxyz';if(di)chars+='0123456789';if(sy)chars+='!@#$%^&*()_+-=[]{}|;:,.<>?';if(!chars)return toast('至少选一种字符');let r='';const a=new Uint32Array(l);crypto.getRandomValues(a);for(let i=0;i<l;i++)r+=chars[a[i]%chars.length];$('pwOut').textContent=r;$('pwStrength').textContent=l>=20?'强':l>=12?'中':'弱'};$('toolContent').innerHTML='<div class="panel"><span class="panel-label">选项</span><div class="row-flex"><div><span style="font-size:13px;color:var(--text2)">长度</span><input type="number" id="pwLen" value="16" min="4" max="128" style="width:80px"></div><div class="check-row" style="padding-top:4px"><label><input type="checkbox" id="pwUp" checked> A-Z</label><label><input type="checkbox" id="pwLo" checked> a-z</label><label><input type="checkbox" id="pwDi" checked> 0-9</label><label><input type="checkbox" id="pwSy" checked> 符号</label></div><button class="btn btn-accent" id="pwGen" style="flex:0;min-width:auto">生成</button></div></div><div class="panel"><div class="panel-label-row"><span class="panel-label" style="margin:0">密码 <span id="pwStrength" style="font-weight:400;font-size:12px;color:var(--text3)"></span></span><button class="btn btn-sm" id="pwCopy">复制</button></div><div class="output-box" id="pwOut" style="font-size:18px;letter-spacing:2px;font-weight:600;text-align:center"></div></div>';$('pwGen').onclick=gen;$('pwCopy').onclick=()=>copyEl('pwOut');gen()}
+
+// ========== LOREM ==========
+function loremRender(){const ZH='中国是一个有着悠久历史和灿烂文化的国度。在这片广袤的土地上，千百年来孕育了无数璀璨的文明瑰宝。从雄伟的万里长城到精巧的苏州园林，从博大精深的中医理论到韵味悠长的书法艺术，每一个文化符号都承载着先人的智慧与心血。现代社会日新月异，科技创新层出不穷。互联网改变了人们的生活方式，人工智能正在重塑产业格局。然而在高速发展的同时，我们更应该珍视和传承那些历经岁月洗礼而愈发珍贵的文化遗产。文化是民族的根脉，是连接过去与未来的桥梁。只有深深扎根于传统，才能在变革中保持定力，在创新中不失本色。';const EN='Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.';const gen=()=>{const n=parseInt($('loremCount').value)||3,zh=$('loremZh').checked;const src=zh?ZH:EN;let r=[];for(let i=0;i<n;i++){const start=Math.floor(Math.random()*(src.length-200));r.push(src.slice(start,start+80+Math.floor(Math.random()*120))+'。')}$('loremOut').textContent=r.join('\n\n');$('loremInfo').textContent=n+' 段 · '+(zh?'中文':'英文')};$('toolContent').innerHTML='<div class="panel"><span class="panel-label">选项</span><div class="row-flex"><div><span style="font-size:13px;color:var(--text2)">段落数</span><input type="number" id="loremCount" value="3" min="1" max="20" style="width:80px"></div><div class="check-row" style="padding-top:4px"><label><input type="checkbox" id="loremZh" checked> 中文</label></div><button class="btn btn-accent" id="loremGen" style="flex:0;min-width:auto">生成</button><span style="font-size:12px;color:var(--text3)" id="loremInfo"></span></div></div><div class="panel"><div class="panel-label-row"><span class="panel-label" style="margin:0">输出</span><button class="btn btn-sm" id="loremCopy">复制</button></div><div class="output-box" id="loremOut"></div></div>';$('loremGen').onclick=gen;$('loremCopy').onclick=()=>copyEl('loremOut');gen()}
+
+// ========== HASH ==========
+function hashRender(){
+async function calc(algo){const v=$('hashIn').value;if(!v)return toast('请先输入');try{let result;if(algo==='MD5'){result=md5(v)}else{const enc=new TextEncoder();const buf=await crypto.subtle.digest(algo,enc.encode(v));const arr=Array.from(new Uint8Array(buf));result=arr.map(b=>b.toString(16).padStart(2,'0')).join('')}$('hashOut').textContent=result;toast(algo+' 完成')}catch(e){$('hashOut').textContent='错误: '+e.message}}
+$('toolContent').innerHTML='<div class="panel"><span class="panel-label">输入</span><textarea id="hashIn" placeholder="输入要计算哈希的文本…"></textarea><div class="btn-row"><button class="btn btn-accent" id="hashMd5">MD5</button><button class="btn btn-accent" id="hash1">SHA-1</button><button class="btn btn-accent" id="hash256">SHA-256</button><button class="btn btn-sm" id="hashClr">清空</button></div></div><div class="panel"><div class="panel-label-row"><span class="panel-label" style="margin:0">摘要</span><button class="btn btn-sm" id="hashCopy">复制</button></div><div class="output-box" id="hashOut" style="word-break:break-all"></div></div>';
+$('hashMd5').onclick=()=>calc('MD5');$('hash1').onclick=()=>calc('SHA-1');$('hash256').onclick=()=>calc('SHA-256');
+$('hashClr').onclick=()=>{$('hashIn').value='';$('hashOut').textContent=''};$('hashCopy').onclick=()=>copyEl('hashOut')}
+
+// ========== CHAR COUNT ==========
+function ccRender(){const update=()=>{const v=$('ccIn').value;$('stChars').textContent=v.length;$('stBytes').textContent=new TextEncoder().encode(v).length;$('stWords').textContent=v.trim()?v.trim().split(/\s+/).length:0;$('stLines').textContent=v?v.split('\n').length:0;$('stCN').textContent=v.replace(/[a-zA-Z0-9\s\p{P}]/gu,'').length};$('toolContent').innerHTML='<div class="panel"><span class="panel-label">输入</span><textarea id="ccIn" placeholder="输入文本…"></textarea><div class="btn-row"><button class="btn btn-sm" id="ccClr">清空</button></div></div><div class="panel"><span class="panel-label">统计</span><div class="stat-row"><span class="stat-tag">字符 <b id="stChars">0</b></span><span class="stat-tag">字节 <b id="stBytes">0</b></span><span class="stat-tag">单词 <b id="stWords">0</b></span><span class="stat-tag">行数 <b id="stLines">0</b></span><span class="stat-tag">中文 <b id="stCN">0</b></span></div></div>';$('ccIn').addEventListener('input',update);$('ccClr').onclick=()=>{$('ccIn').value='';update()}}
+
+// ========== RADIX ==========
+function radixRender(){const conv=()=>{const v=$('radixIn').value.trim();if(!v)return toast('请先输入');const f=$('radixFrom').value;let n;switch(f){case'bin':n=parseInt(v,2);break;case'oct':n=parseInt(v,8);break;case'dec':n=parseInt(v,10);break;case'hex':n=parseInt(v,16);break}if(isNaN(n))return toast('无效数值');$('radixBin').textContent=n.toString(2);$('radixOct').textContent=n.toString(8);$('radixDec').textContent=n.toString(10);$('radixHex').textContent=n.toString(16).toUpperCase()};$('toolContent').innerHTML='<div class="panel"><span class="panel-label">输入</span><div class="row-flex"><input type="text" id="radixIn" placeholder="输入任意进制数值…"><button class="btn btn-accent" id="radixGo" style="flex:0;min-width:auto">转换</button><select id="radixFrom"><option value="dec">十进制</option><option value="hex">十六进制</option><option value="bin">二进制</option><option value="oct">八进制</option></select></div></div><div class="panel"><span class="panel-label">结果</span><div style="display:grid;grid-template-columns:1fr 1fr;gap:10px"><div><div style="font-size:10px;color:var(--text3);margin-bottom:3px">BIN</div><div class="output-box" id="radixBin" style="min-height:auto"></div></div><div><div style="font-size:10px;color:var(--text3);margin-bottom:3px">OCT</div><div class="output-box" id="radixOct" style="min-height:auto"></div></div><div><div style="font-size:10px;color:var(--text3);margin-bottom:3px">DEC</div><div class="output-box" id="radixDec" style="min-height:auto"></div></div><div><div style="font-size:10px;color:var(--text3);margin-bottom:3px">HEX</div><div class="output-box" id="radixHex" style="min-height:auto"></div></div></div></div>';$('radixGo').onclick=conv}
+
+// ========== TIMESTAMP ==========
+function tsRender(){const now=new Date();$('toolContent').innerHTML='<div class="panel"><span class="panel-label">实时时钟</span><div style="display:grid;grid-template-columns:repeat(3,1fr);gap:20px"><div><div style="font-size:11px;color:var(--text3);margin-bottom:4px">秒级时间戳</div><div style="font-size:22px;font-weight:600;font-family:monospace;letter-spacing:-0.5px" id="tsSec">'+Math.floor(now.getTime()/1000)+'</div></div><div><div style="font-size:11px;color:var(--text3);margin-bottom:4px">毫秒级时间戳</div><div style="font-size:22px;font-weight:600;font-family:monospace;letter-spacing:-0.5px" id="tsMs">'+now.getTime()+'</div></div><div><div style="font-size:11px;color:var(--text3);margin-bottom:4px">当前时间</div><div style="font-size:17px;font-weight:600" id="tsNow">'+now.toLocaleString('zh-CN',{hour12:false})+'</div></div></div></div><div class="panel"><span class="panel-label">时间戳 → 日期</span><div style="display:flex;gap:8px"><input type="number" id="tsIn" placeholder="输入时间戳" style="flex:1"><button class="btn btn-accent" id="tsGo">转换</button></div><div class="output-box" id="tsOut" style="margin-top:10px"></div></div><div class="panel"><span class="panel-label">日期 → 时间戳</span><div style="display:flex;gap:8px"><input type="text" id="dtIn" placeholder="如: 2026-07-11 14:30:00" style="flex:1"><button class="btn btn-accent" id="dtGo">转换</button></div><div class="output-box" id="dtOut" style="margin-top:10px"></div></div>';clearTimers();_tsTimer=setInterval(()=>{const a=$('tsSec'),b=$('tsMs'),c=$('tsNow');if(!a||!b||!c)return;const n=new Date();a.textContent=Math.floor(n.getTime()/1000);b.textContent=n.getTime();c.textContent=n.toLocaleString('zh-CN',{hour12:false})},1000);$('tsGo').onclick=()=>{let v=parseInt($('tsIn').value.trim());if(isNaN(v))return toast('请输入有效时间戳');if(v<1e10)v*=1000;const d=new Date(v);$('tsOut').textContent='本地: '+d.toLocaleString('zh-CN',{hour12:false})+'\nUTC: '+d.toISOString()+'\n秒: '+Math.floor(v/1000)+' · 毫秒: '+v+'\n星期'+['日','一','二','三','四','五','六'][d.getDay()]};$('dtGo').onclick=()=>{const d=new Date($('dtIn').value.trim());if(isNaN(d.getTime()))return toast('日期格式无效');$('dtOut').textContent='秒级: '+Math.floor(d.getTime()/1000)+'\n毫秒级: '+d.getTime()+'\nISO: '+d.toISOString()}}
+
+// ========== COLOR ==========
+function parseColor(i){i=i.trim();if(/^#?[0-9a-fA-F]{3,8}$/.test(i)){if(i[0]==='#')i=i.slice(1);if(i.length===3)i=i[0]+i[0]+i[1]+i[1]+i[2]+i[2];if(i.length===6||i.length===8)return{r:parseInt(i.slice(0,2),16),g:parseInt(i.slice(2,4),16),b:parseInt(i.slice(4,6),16),a:i.length===8?parseInt(i.slice(6,8),16)/255:1}}const rm=i.match(/rgba?\s*\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*(?:,\s*([\d.]+))?\s*\)/i);if(rm)return{r:+rm[1],g:+rm[2],b:+rm[3],a:rm[4]!==undefined?+rm[4]:1};const hm=i.match(/hsla?\s*\(\s*(\d+)\s*,\s*(\d+)%\s*,\s*(\d+)%\s*(?:,\s*([\d.]+))?\s*\)/i);if(hm){const h=+hm[1]/360,s=+hm[2]/100,l=+hm[3]/100,a=hm[4]!==undefined?+hm[4]:1;let r,g,b;if(s===0){r=g=b=l}else{const h2r=(p,q,t)=>{if(t<0)t+=1;if(t>1)t-=1;if(t<1/6)return p+(q-p)*6*t;if(t<1/2)return q;if(t<2/3)return p+(q-p)*(2/3-t)*6;return p};const q=l<0.5?l*(1+s):l+s-l*s,p=2*l-q;r=h2r(p,q,h+1/3);g=h2r(p,q,h);b=h2r(p,q,h-1/3)}return{r:Math.round(r*255),g:Math.round(g*255),b:Math.round(b*255),a}}return null}
+function rgb2hsl(r,g,b){r/=255;g/=255;b/=255;const M=Math.max(r,g,b),m=Math.min(r,g,b);let h=0,s=0,l=(M+m)/2;if(M!==m){const d=M-m;s=l>0.5?d/(2-M-m):d/(M+m);switch(M){case r:h=((g-b)/d+(g<b?6:0))/6;break;case g:h=((b-r)/d+2)/6;break;case b:h=((r-g)/d+4)/6;break}}return{h:Math.round(h*360),s:Math.round(s*100),l:Math.round(l*100)}}
+function colorRender(){$('toolContent').innerHTML='<div class="panel"><div style="display:flex;gap:12px;align-items:stretch"><div style="flex:2"><span class="panel-label">输入颜色值</span><input type="text" id="clrIn" value="#1a1a1a"></div><div class="color-block" id="clrBlock" style="background:#1a1a1a"></div></div></div><div class="panel"><span class="panel-label">转换结果</span><div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px"><div><div style="font-size:10px;color:var(--text3);margin-bottom:4px">HEX</div><div class="output-box" id="clrHex" style="min-height:auto;font-size:14px;font-weight:600">#1A1A1A</div></div><div><div style="font-size:10px;color:var(--text3);margin-bottom:4px">RGB</div><div class="output-box" id="clrRgb" style="min-height:auto;font-size:14px;font-weight:600">rgb(26,26,26)</div></div><div><div style="font-size:10px;color:var(--text3);margin-bottom:4px">HSL</div><div class="output-box" id="clrHsl" style="min-height:auto;font-size:14px;font-weight:600">hsl(0,0%,10%)</div></div></div><div class="btn-row"><button class="btn btn-sm" id="cpHex">复制 HEX</button><button class="btn btn-sm" id="cpRgb">复制 RGB</button><button class="btn btn-sm" id="cpHsl">复制 HSL</button></div></div><div class="panel"><span class="panel-label">快捷色板</span><div class="swatch-row">'+['#1a1a1a','#4a4a4a','#8a8a86','#b5b5b0','#e03e3e','#0d9488','#3b82f6','#8b5cf6','#f59e0b','#ec4899','#14b8a6','#f97316'].map(c=>'<div class="swatch" style="background:'+c+'" data-c="'+c+'"></div>').join('')+'</div></div>';const u=()=>{const v=$('clrIn').value.trim();if(!v){['clrHex','clrRgb','clrHsl'].forEach(id=>$(id).textContent='—');$('clrBlock').style.background='transparent';return}const c=parseColor(v);if(!c){['clrHex','clrRgb','clrHsl'].forEach(id=>$(id).textContent='无法识别');return}const h='#'+[c.r,c.g,c.b].map(x=>x.toString(16).padStart(2,'0').toUpperCase()).join(''),r=c.a<1?'rgba('+c.r+', '+c.g+', '+c.b+', '+c.a+')':'rgb('+c.r+', '+c.g+', '+c.b+')',{h:hh,s,ll}=rgb2hsl(c.r,c.g,c.b),hs=c.a<1?'hsla('+hh+', '+s+'%, '+ll+'%, '+c.a+')':'hsl('+hh+', '+s+'%, '+ll+'%)';$('clrHex').textContent=h;$('clrRgb').textContent=r;$('clrHsl').textContent=hs;$('clrBlock').style.background=r};$('clrIn').addEventListener('input',u);u();document.querySelectorAll('.swatch').forEach(s=>s.onclick=()=>{$('clrIn').value=s.dataset.c;u()});['cpHex','cpRgb','cpHsl'].forEach((id,i)=>$(id).onclick=()=>copyEl(['clrHex','clrRgb','clrHsl'][i]))}
+
+// ========== REGEX ==========
+function regexRender(){$('toolContent').innerHTML='<div class="panel"><div style="display:flex;gap:12px;align-items:flex-end;flex-wrap:wrap"><div style="flex:2;min-width:180px"><span class="panel-label">正则表达式</span><input type="text" id="rxPat" placeholder="例如: \\d{4}-\\d{2}-\\d{2}"></div><div class="check-row" style="padding-bottom:6px"><label><input type="checkbox" id="rxG" checked> g</label><label><input type="checkbox" id="rxI"> i</label><label><input type="checkbox" id="rxM"> m</label></div></div><textarea id="rxText" placeholder="输入测试文本…" style="margin-top:10px"></textarea><div class="btn-row"><button class="btn btn-accent" id="rxTest">测试匹配</button><button class="btn" id="rxReplace">替换</button><input type="text" id="rxRepl" placeholder="替换为…" style="flex:1;min-width:100px;font-family:monospace"><button class="btn btn-sm" id="rxClr">清空</button></div></div><div class="panel"><div class="panel-label-row"><span class="panel-label" style="margin:0">结果 <span id="rxCnt" style="font-weight:400;font-size:12px;color:var(--text3)"></span></span><button class="btn btn-sm" id="rxCopy">复制</button></div><div class="output-box" id="rxOut"></div></div>';function f(){let f='';if($('rxG').checked)f+='g';if($('rxI').checked)f+='i';if($('rxM').checked)f+='m';return f}$('rxTest').onclick=()=>{const p=$('rxPat').value,t=$('rxText').value;$('rxCnt').textContent='';if(!p||!t)return toast('请输入正则和测试文本');try{const re=new RegExp(p,f()),m=[...t.matchAll(re)];if(!m.length){$('rxOut').textContent='没有匹配项';$('rxCnt').textContent='0 个';return}let o='';m.forEach((m,i)=>{o+='#'+(i+1)+' \"'+m[0]+'\" 位置 '+m.index+'\n';if(m.length>1)for(let j=1;j<m.length;j++)o+='  组'+j+': \"'+(m[j]||'(未匹配)')+'\"\n';o+='上下文: …'+t.slice(Math.max(0,m.index-12),m.index)+'▸'+m[0]+'▸'+t.slice(m.index+m[0].length,m.index+m[0].length+12)+'…\n\n'});$('rxOut').textContent=o;$('rxCnt').textContent=m.length+' 个匹配'}catch(e){$('rxOut').textContent='正则错误: '+e.message}};$('rxReplace').onclick=()=>{const p=$('rxPat').value,t=$('rxText').value,r=$('rxRepl').value;if(!p||!t)return toast('请输入正则和测试文本');try{const re=new RegExp(p,f()),c=(t.match(re)||[]).length;$('rxOut').textContent=t.replace(re,r);$('rxCnt').textContent='替换 '+c+' 处'}catch(e){$('rxOut').textContent='错误: '+e.message}};$('rxClr').onclick=()=>{$('rxPat').value='';$('rxText').value='';$('rxRepl').value='';$('rxOut').textContent='';$('rxCnt').textContent=''};$('rxCopy').onclick=()=>copyEl('rxOut')}
+
+// ========== MARKDOWN ==========
+function mdRender(){$('toolContent').innerHTML='<div class="split2"><div class="panel"><span class="panel-label">编辑</span><textarea id="mdIn" style="min-height:360px"># 欢迎使用 Markdown 预览\n\n## 基本语法\n**粗体** *斜体* ~~删除线~~\n\n## 列表\n1. 有序项目\n2. 第二项\n- 无序项目\n\n## 代码\n行内 `code` 和代码块：\n\n```javascript\nfunction hello() {\n  console.log("Hello DevBox!");\n}\n```\n\n## 引用\n> 这是一段引用文字\n\n## 表格\n| 工具 | 状态 |\n|------|------|\n| JSON | ✅ |\n| MD   | ✅ |</textarea></div><div class="panel"><span class="panel-label">预览</span><div class="md-preview" id="mdPreview"></div></div></div>';const u=()=>{try{$('mdPreview').innerHTML=marked.parse($('mdIn').value)}catch(e){$('mdPreview').innerHTML='<p>渲染错误</p>'}};$('mdIn').addEventListener('input',u);u()}
+
+// ========== TEXT ==========
+function textRender(){$('toolContent').innerHTML='<div class="panel"><span class="panel-label">输入</span><textarea id="txtIn" placeholder="每行一条文本…"></textarea><div class="btn-row"><button class="btn btn-accent" id="txtDedup">去重</button><button class="btn" id="txtAsc">升序</button><button class="btn" id="txtDesc">降序</button><button class="btn" id="txtRev">反转</button><button class="btn" id="txtUpper">大写</button><button class="btn" id="txtLower">小写</button><button class="btn btn-sm" id="txtClr">清空</button></div><div class="stat-row" id="txtStats" style="display:none"><span class="stat-tag">行数 <b id="stLines">0</b></span><span class="stat-tag">字符 <b id="stChars">0</b></span><span class="stat-tag">唯一 <b id="stDedup">0</b></span></div></div><div class="panel"><div class="panel-label-row"><span class="panel-label" style="margin:0">输出</span><button class="btn btn-sm" id="txtCopy">复制</button></div><div class="output-box" id="txtOut"></div></div>';const gl=()=>$('txtIn').value.split('\n'),so=(l)=>{const t=l.join('\n');$('txtOut').textContent=t;$('stLines').textContent=l.length;$('stChars').textContent=t.length;$('stDedup').textContent=new Set(l.filter(x=>x!=='')).size;$('txtStats').style.display=t?'flex':'none'};$('txtDedup').onclick=()=>{const l=gl(),s=new Set();so(l.filter(x=>s.has(x)?false:(s.add(x),true)));toast('去重完成')};$('txtAsc').onclick=()=>{so(gl().filter(l=>l!=='').sort((a,b)=>a.localeCompare(b,'zh')));toast('升序完成')};$('txtDesc').onclick=()=>{so(gl().filter(l=>l!=='').sort((a,b)=>b.localeCompare(a,'zh')));toast('降序完成')};$('txtRev').onclick=()=>{so(gl().reverse());toast('反转完成')};$('txtUpper').onclick=()=>{so(gl().map(l=>l.toUpperCase()));toast('已转大写')};$('txtLower').onclick=()=>{so(gl().map(l=>l.toLowerCase()));toast('已转小写')};$('txtClr').onclick=()=>{$('txtIn').value='';$('txtOut').textContent='';$('txtStats').style.display='none'};$('txtCopy').onclick=()=>copyEl('txtOut')}
+
+// ========== THEME ==========
+function toggleTheme(){const b=document.body,c=b.getAttribute('data-theme'),n=c==='dark'?'light':'dark';b.setAttribute('data-theme',n);document.querySelector('.btn-ghost').textContent=n==='dark'?'☀️':'🌙';localStorage.setItem('devbox-theme',n)};(function(){const t=localStorage.getItem('devbox-theme')||'light';document.body.setAttribute('data-theme',t);document.querySelector('.btn-ghost').textContent=t==='dark'?'☀️':'🌙'})();
+document.addEventListener('keydown',e=>{if((e.ctrlKey||e.metaKey)&&e.key==='Enter'){e.preventDefault();['jsonFmt','rxTest'].forEach(id=>{const b=document.getElementById(id);if(b&&b.offsetParent)b.click()})}});
+console.log('DevBox · 20 tools ready');
+</script>
+</body>
+</html>
